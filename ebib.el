@@ -4784,16 +4784,16 @@ is applied.  If no entry matches, URL is returned unchanged."
         (funcall fn url)
       url)))
 
-(defun ebib-import-file (arg)
+(defun ebib-import-file (arg file-path)
   "Import a file into the database.
 Ask the user for a file path, rename it and move it to the first
 directory in `ebib-file-search-dirs'.  The new name is created by
 applying the function in `ebib-name-transform-function' to the
 entry key.  The file extension of the original file is retained.
 If prefix ARG is non-nil, do not delete the original file."
-  (interactive "P")
+  (interactive (list current-prefix-arg
+                     (expand-file-name (read-file-name "File to import: " ebib-import-directory nil t))))
   (let* ((key (ebib--get-key-at-point))
-         (file-path (expand-file-name (read-file-name "File to import: " ebib-import-directory nil t)))
          (ext (file-name-extension file-path))
          (new-name (ebib--create-file-name-from-key key ext))
          (dest-dir (file-name-as-directory (car ebib-file-search-dirs)))
