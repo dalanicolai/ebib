@@ -1,7 +1,7 @@
-;; TODO first filer out elements matching 'arXiv'
-
 ;; TODO add poppler (pdftohtml) backend. Unfortunately `pdftohtml' errors on my
 ;; system.
+
+(require 'cl-lib)
 
 ;; (defun height (x)
 ;;   (- (nth 3 x) (nth 1 x)))
@@ -105,20 +105,18 @@
       (insert (shell-command-to-string
                (format "mutool draw -F html '%s' 1"
                        file)))
-      (dom-by-tag (libxml-parse-html-region (point-min) (point-max)) 'span)))
+      (let ((dom-spans (dom-by-tag (libxml-parse-html-region (point-min) (point-max)) 'span)))
+        (parse-print dom-spans))))
 
 (defun pdf-get-title-spans (dom)
-  ;; (interactive (list (pdf-get-spans)))
-  (let* (
-         ;; (max-spans (if (< (length dom) 30)
-         ;;                (length dom)
-         ;;              30))
-         ;; (spans (cl-subseq dom 0 max-spans))
-         ;; (maximum (apply 'max (mapcar (lambda (x) (pdf-get-span-font-size x)) spans)))
-         ;; (title-spans (list (car spans))))
-         (dom (if (string-match "arXiv" (car (last (car dom))))
-                  (cdr dom)
-                dom))
+  (interactive (list (pdf-get-spans)))
+  (let* ((max-spans (if (< (length dom) 30)
+                        (length dom)
+                      30))
+         (spans (cl-subseq dom 0 max-spans))
+         (maximum (apply 'max (mapcar (lambda (x) (pdf-get-span-font-size x)) spans)))
+         (title-spans (list (car spans)))
+         (dom (cl-delete-if (lambda (x) (string-match "arXiv" (car (last x)))) dom))
          (title-spans (list (car dom))))
     (dolist (x (cdr dom) title-spans)
       ;; conditional to exclude Initials (drop caps)

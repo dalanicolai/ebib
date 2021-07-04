@@ -38,10 +38,15 @@
 ;;               (t nil)))
 ;;         (message "Should be invoked from *ebib-index* buffer")))
 
-(load "~/Sync/emacs/lisp/pdf-get-title.el")
+(load "./pdf-get-title.el")
 (require 'org-ref-pdf)
 
 (defalias 'ebib-pdf-auto-detect-doi 'org-ref-extract-doi-from-pdf)
+
+(defmacro parse-print (data)
+  `(if (called-interactively-p)
+       (pp ,data)
+    ,data))
 
 (defun ebib-pdf-auto-detect-arxiv-id (pdf)
   "Try to extract a arxiv-id from a PDF file.
@@ -54,8 +59,9 @@ If there is a trailing . we chomp it off. Returns a list of arxiv-id
 strings, or nil.
 
 "
+  (interactive (list (buffer-file-name)))
   (with-temp-buffer
-    (insert (shell-command-to-string (format "%s %s -"
+    (insert (shell-command-to-string (format "%s -l 2 %s -"
 					                                   pdftotext-executable
 					                                   (shell-quote-argument (dnd-unescape-uri pdf)))))
     (goto-char (point-min))
@@ -63,7 +69,7 @@ strings, or nil.
       (while (re-search-forward "arXiv:\\([^ ]*\\)" nil t)
 	      (let ((id (match-string 1)))
 	        (cl-pushnew id matches :test #'equal)))
-      matches)))
+      (parse-print matches))))
 
 (defun ebib--fetch-metadata (doi)
   "Insert BibTeX entry matching DOI."
